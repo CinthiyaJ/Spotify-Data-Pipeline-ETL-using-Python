@@ -60,6 +60,7 @@ def lambda_handler(event, context):
     Key = "staging_zone/raw_data/"
     
     spotify_data = []
+    spotify_keys = []
     for files in s3.list_objects(Bucket=Bucket, Prefix=Key)['Contents']:
         files_key = files['Key']
         if files_key.split('.')[-1] == "json":
@@ -67,6 +68,7 @@ def lambda_handler(event, context):
             content = response['Body']
             jsonObject = json.loads(content.read())
             spotify_data.append(jsonObject)
+            spotify_keys.append(files_key)
             
     for data in spotify_data:
         album_list = album(data)
@@ -98,10 +100,17 @@ def lambda_handler(event, context):
         artist_content = artist_buffer.getvalue()
         s3.put_object(Bucket=Bucket, Key=artist_key, Body=artist_content)
         
-        
         song_key = "transformed_data/songs_data/song_transformed_" +str(datetime.now())+ ".csv"
         song_buffer = StringIO()
         song_df.to_csv(song_buffer, index=False)
         song_content = song_buffer.getvalue()
         s3.put_object(Bucket=Bucket, Key=song_key, Body=song_content)
         
+    s3_resource = boto3.resource('s3')
+    for key in spotify_keys:
+        copy_source = {
+            'Bucket' : Bucket,
+            'Key' : key
+        }
+        s3_resource.meta.client.copy(copy_source, Bucket, 'processed_data/'+ key.split("/")[-1])
+        s3_resource.Object(Bucket, key).delete()
