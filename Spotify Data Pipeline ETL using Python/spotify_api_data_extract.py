@@ -23,7 +23,7 @@ def lambda_handler(event, context):
     client = boto3.client('s3')
     
     #define filename
-    fileName = "spotify_raw_"+ str(datetime.now()) +".json"
+    fileName = "spotify_raw_data_"+ str(datetime.now()) +".json"
     
     #load spotify data into staging zone (s3 bucket).
     client.put_object(
