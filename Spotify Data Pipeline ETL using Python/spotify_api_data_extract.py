@@ -4,6 +4,7 @@ import boto3
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from datetime import datetime
+import pandas
 
 def lambda_handler(event, context):
     
